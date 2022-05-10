@@ -1,80 +1,67 @@
+import s from './App.module.css';
 import { Component } from "react";
 import { nanoid } from "nanoid";
+import ContactForm from "./ContactForm";
+import Filter from './Filter';
+import ContactList from './ContactList';
 
 export class App extends Component {
   state = {
-    contacts: [],
-    name: '',
-    number: ''
+    contacts: [
+      {id: 'id-1', name: 'Rosie Simpson', number: '459-12-56'},
+      {id: 'id-2', name: 'Hermione Kline', number: '443-89-12'},
+      {id: 'id-3', name: 'Eden Clements', number: '645-17-79'},
+      {id: 'id-4', name: 'Annie Copeland', number: '227-91-26'},
+    ],
+    filter: ''
   };
 
-  handleChange = evt => {
-    const { name, value } = evt.target;
-    this.setState({ [name]: value });
-  };
+  formSubmitHandler = ({name, number}) => {
+    const { contacts } = this.state;
+   
+    if (contacts.map(contact => contact.name.toLowerCase()).includes(name.toLowerCase())) {
+      return alert(`${name} is already in contacts`)
+    };
 
-  handleSubmit = evt => {
-    evt.preventDefault();
-    const { name, number, contacts } = this.state;
     const contact = {
       name,
       number,
       id: nanoid()
-    }
+    };
 
-    contacts.push(contact);
-    this.reset();
+    this.setState(prevState => ({ contacts: [...prevState.contacts, contact],}));
   };
 
-  reset = () => {
-    this.setState({ name: '', number: '' });
+  handleFilter = (event) => {
+    const { name, value } = event.currentTarget;
+    this.setState({ [name]: value });
+  };
+
+  filteredContacts = () => {
+    const { contacts, filter } = this.state;
+
+    return contacts.filter(contact => contact.name.toLowerCase().includes(filter.toLowerCase()));
+  };
+
+  deleteContact = (event) => {
+    const { id } = event.target;
+
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== id)
+    }));
   };
 
   render() {
-    const { name, number, contacts } = this.state;
+    const { filter } = this.state;
 
     return (
-      <>
-        <h2>Phonebook</h2>
-          <form onSubmit={this.handleSubmit}>
-            <label>
-              Name
-              <input
-                type="text"
-                name="name"
-                value={name}
-                onChange={this.handleChange}
-                pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-                title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-                required
-              />
-          </label>
-          <label>
-            Number
-            <input
-              type="tel"
-              name="number"
-              value={number}
-              onChange={this.handleChange}
-              pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-              title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-              required
-            />
-          </label>
-              
-            <button type="submit">
-              Add contact
-            </button>
-          </form>
-        
-          <h2>Contacts</h2>
-          <ul>
-            {contacts.map(({ name, number, id }) => {
-              return (
-                <li key={id}>{name}: {number}</li>
-              )})}
-          </ul>
-        </>
+      <div className={s.container}>
+        <h1>Phonebook</h1>
+        <ContactForm onSubmit={this.formSubmitHandler} />
+        <h2>Contacts</h2>
+        <Filter value={filter} onChange={this.handleFilter} />
+        <ContactList filteredContacts={this.filteredContacts()} deleteContact={this.deleteContact} />
+      </div>
     );
   }
 }
